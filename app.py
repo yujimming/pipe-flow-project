@@ -7,11 +7,10 @@ from scipy.optimize import bisect
 
 st.set_page_config(page_title='원관 층류 유동 · 관경 역설계', page_icon='💧', layout='wide')
 st.title('💧 원관 내 층류 유동 및 관경 역설계 프로그램')
-st.caption('웹앱 수정 버전 2.1 · 그래프 영문 표기 및 디버그 출력 제거')
 st.caption('화공유체역학 팀 프로젝트 | 정방향 계산 · Parameter Sweep · 역설계 · 독립 검증')
 
 with st.sidebar:
-    st.header('① 사용자 입력')
+    st.header('사용자 입력')
     rho = st.number_input('밀도 ρ (kg/m³)', min_value=0.000001, value=1000.0, format='%.4f')
     mu = st.number_input('점도 μ (Pa·s)', min_value=0.000000001, value=0.001, format='%.6f')
     L = st.number_input('관 길이 L (m)', min_value=0.000001, value=10.0)
@@ -75,7 +74,7 @@ def lineplot(x, y, xlabel, ylabel, title, limit=None):
     return fig
 
 
-st.header('② 정방향 계산')
+st.header('① 정방향 계산')
 Q, V, Re, tau_w = flow(D)
 R = D / 2
 r = np.linspace(0, R, 250)
@@ -93,7 +92,7 @@ with a:
 with b:
     st.pyplot(lineplot(r*1000, tau, '반지름 r (mm)', '|τ| (Pa)', '전단응력분포'))
 
-st.header('③ Parameter Sweep (조건 반복)')
+st.header('② Parameter Sweep (조건 반복)')
 Ds = np.unique(np.sort(np.r_[np.linspace(0.001, 0.030, 21), D]))
 Qs, Vs, Res, Taus = np.array([flow(x) for x in Ds]).T
 D_limit = (32 * mu**2 * L * Re_limit / (rho * delta_P))**(1/3)
@@ -106,7 +105,7 @@ for col, (ys, ylabel, title) in enumerate([(Qs*1e6, '유량 (mL/s)', '관경–�
         st.pyplot(lineplot(Ds*1000, ys, '관경 (mm)', ylabel, title, D_limit*1000))
 st.caption('점선 구간은 Hagen–Poiseuille 층류식의 수학적 외삽이며 실제 난류 유량을 나타내지 않습니다.')
 
-st.header('④ 역설계 — 최소 관경 탐색')
+st.header('③ 역설계 — 최소 관경 탐색')
 D_exact = (128 * mu * L * Q_target / (np.pi * P_allow))**0.25
 f = lambda x: np.pi * P_allow * x**4 / (128 * mu * L) - Q_target
 low = max(D_exact*0.25, 1e-12)
@@ -132,7 +131,7 @@ fig.axes[0].axvline(D_design*1000, color='green', linestyle=':', label='Selected
 fig.axes[0].legend()
 st.pyplot(fig)
 
-st.header('⑤ 검증 및 해석')
+st.header('④ 검증 및 해석')
 Q_int = quad(lambda rr: 2*np.pi*rr*delta_P*(R**2-rr**2)/(4*mu*L), 0, R, epsabs=1e-16)[0]
 err_Q = abs(Q_int-Q)/Q*100
 err_D = abs(D_num-D_exact)/D_exact*100
